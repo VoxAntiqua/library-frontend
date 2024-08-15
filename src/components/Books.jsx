@@ -5,27 +5,38 @@ import { ALL_BOOKS } from '../queries'
 const Books = props => {
   const [genreFilter, setGenreFilter] = useState(null)
   const [uniqueGenres, setUniqueGenres] = useState([])
-  const allBooksResult = useQuery(ALL_BOOKS)
 
-  const filteredBooksResult = useQuery(ALL_BOOKS, {
+  const {
+    data: filteredBooksData,
+    loading: filteredBooksLoading,
+    refetch,
+  } = useQuery(ALL_BOOKS, {
     variables: { genre: genreFilter },
   })
 
+  const { data: allBooksData, loading: allBooksLoading } = useQuery(ALL_BOOKS)
+
   useEffect(() => {
-    if (allBooksResult.data) {
-      const genres = allBooksResult.data.allBooks.flatMap(book => book.genres)
+    if (allBooksData) {
+      const genres = allBooksData.allBooks.flatMap(book => book.genres)
       setUniqueGenres([...new Set(genres)])
     }
-  }, [allBooksResult.data])
+  }, [allBooksData])
+
+  useEffect(() => {
+    if (filteredBooksData) {
+      refetch()
+    }
+  }, [genreFilter])
 
   if (!props.show) {
     return null
   }
 
-  if (filteredBooksResult.loading) {
+  if (allBooksLoading || filteredBooksLoading) {
     return <div>loading...</div>
   }
-  const books = filteredBooksResult.data.allBooks
+  const books = filteredBooksData.allBooks
 
   return (
     <div>
