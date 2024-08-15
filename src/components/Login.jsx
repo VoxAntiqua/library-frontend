@@ -1,8 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useMutation } from '@apollo/client'
+import { LOGIN } from '../queries'
 
 const Login = props => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+
+  const [login, result] = useMutation(LOGIN, {
+    onError: error => {
+      console.log(error.graphQLErrors[0].message)
+    },
+  })
+
+  useEffect(() => {
+    if (result.data) {
+      const token = result.data.login.value
+      props.setToken(token)
+      localStorage.setItem('library-user-token', token)
+    }
+  }, [result.data])
+
+  const submit = async event => {
+    event.preventDefault()
+    login({ variables: { username, password } })
+  }
 
   if (!props.show) {
     return null
@@ -10,7 +31,7 @@ const Login = props => {
 
   return (
     <div>
-      <form>
+      <form onSubmit={submit}>
         <div>
           username
           <input
